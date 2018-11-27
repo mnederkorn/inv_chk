@@ -1,14 +1,14 @@
 # inv_chk
-Invariant Checking of type graph language based on core graph computation 
+Invariant Checking for type graph language based on core graph computation 
 
 ## Installation:
 
 This tool is based on cores.py from: [CoReS](https://github.com/mnederkorn/CoReS)  
-To run inv_chk you need to make cores.py available in your python context. E.g. by putting inv_chk.py in the same folder as cores.py.
+To run inv_chk you need to make cores.py available in your python context. The easiest way to do this, is by putting inv_chk.py in the same folder as cores.py.
 
 ## Usage:
 
-To run inv_chk, pass it a filepath to a problem instance. E.g.:  
+To run inv_chk, pass it a filepath to a problem instance, e.g.:  
 ```python .\inv_chk.py "C:\Users\Maxime\Documents\GitHub\inv_chk\rules\bipartite_inv.txt"```
 
 A problem instance is formated as follows:
@@ -33,7 +33,7 @@ morphR:
 ```  
 A graph is formated as follows:  
 First line is a list of space separated integers which name the nodes of the graph.
-All following lines consist of a single integer representing the source node of an edge, followed by a space and another integer representing the target node, followed by a space and a single capital letter denominating the lable of the given edge.  
+All following lines consist of a single integer representing the source node of an edge, followed by a space and another integer representing the target node, followed by a space and a single capital letter denominating the label of the given edge.  
 A morphism is formated as follows:
 ```
 V:
@@ -45,9 +45,10 @@ Mappings are formated as follow:
 ```  
 [some node/edge in I]->[some node/edge in L/R]
 ``` 
-Edge e is written as:
-```src(e).tgt(e).lab(e)```
+To specify an edge in morphism you concatenate it's source and target node as well as it's label with a dot.  
+E.g.: ![example_edge](./example_edge.gif) would be written as:  
+```1.2.A```
 
-For example problem instances see:  
+Examples:  
 [bipartite_inv](rules/bipartite_inv.txt)  
 [bipartite_not_inv](rules/bipartite_not_inv.txt)
