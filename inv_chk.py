@@ -89,9 +89,8 @@ class Inv_Chk:
 			t_r = find_morphism(self.rules[n].r.graph, self.core_t.graph)
 
 			for m in t_l:
-				if not any([all([m[0][self.rules[n].l_v[k]]==l[0][self.rules[n].r_v[k]] for k in self.rules[n].i.graph]) and
-					all([n[1][self.rules[n].l_e[k]]==m[1][self.rules[n].r_e[k]] for k in [".".join((j,h,i)) for j in self.rules[n].i.graph for h in self.rules[n].i.graph[n] for i in self.rules[n].i.graph[n][m]]])
-					for l in t_r]):
+				if not any([all([m[0][self.rules[n].l_v[k]]==l[0][self.rules[n].r_v[k]]	for k in self.rules[n].i.graph]) and
+					all([m[1][self.rules[n].l_e[k]]==l[1][self.rules[n].r_e[k]] for k in [".".join((j,h,i)) for j in self.rules[n].i.graph for h in self.rules[n].i.graph[j] for i in self.rules[n].i.graph[j][h]]]) for l in t_r]):
 					print("The type graph language L(T) is not closed under the set of rules. Under Rule {}, there is no fitting t_R for t_L: {}".format(n,pprint_morphism(m)))
 					return
 		
@@ -168,14 +167,21 @@ def find_morphism(L, T):
 		if s.check()==sat:
 
 			m = s.model()
-			mappings.append(({str(m[phi_V].entry(n).arg_value(0)): str(m[phi_V].entry(n).value()) for n in range(m[phi_V].num_entries())},{str(m[phi_E].entry(n).arg_value(0)): str(m[phi_E].entry(n).value()) for n in range(m[phi_E].num_entries())}))
+
+			v = {getattr(V_L, n): m.eval(phi_V(getattr(V_L, n))) for n in L}
+			e = {getattr(E_L, n): m.eval(phi_E(getattr(E_L, n))) for n in [".".join((n,m,l)) for n in L for m in L[n] for l in L[n][m]]}
+
+			v_s = {str(n):str(v[n]) for n in v}
+			e_s = {str(n):str(e[n]) for n in e}
+
+			mappings.append((v_s,e_s))
 
 			deny = []
 
-			for n in range(m[phi_V].num_entries()):
-				deny.append(phi_V(m[phi_V].entry(n).arg_value(0)) == m[phi_V].entry(n).value())
-			for n in range(m[phi_E].num_entries()):
-				deny.append(phi_E(m[phi_E].entry(n).arg_value(0)) == m[phi_E].entry(n).value())
+			for n in v:
+				deny.append(phi_V(n)==v[n])
+			for n in e:
+				deny.append(phi_E(n)==e[n])
 
 			s.add(Not(And(deny, cntxt), cntxt))
 
