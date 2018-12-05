@@ -17,12 +17,21 @@ zoom_factor = (2**(1/2))
 
 class Rule:
 
-    def __init__(self, s):
+    def __init__(self, s, n):
 
         graph_re = r"(\n(    |\t)*\d+( \d+)*(\n(    |\t)*\d+ \d+ [A-Z]+)*)"
         morph_re = r"\n(    |\t)*V:(\n(    |\t)*\d+->\d+)+\n(    |\t)*E:(\n(    |\t)*\d+ \d+ [A-Z]+->\d+ \d+ [A-Z]+)*"
 
         regex = re.fullmatch(r"\n(    |\t)*I:(?P<I>{})\n(    |\t)*L:(?P<L>{})\n(    |\t)*R:(?P<R>{})\n(    |\t)*morphL:(?P<morphL>{})\n(    |\t)*morphR:(?P<morphR>{})".format(graph_re, graph_re, graph_re, morph_re,  morph_re, ), s, flags=re.DOTALL)
+
+        if regex == None:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The content does not match the required syntax.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe content does not match the required syntax.".format(n))
+                raise
 
         i = regex.group("I").lstrip("\n")
         i = re.compile("(    |\t)").sub("", i)
@@ -30,7 +39,16 @@ class Rule:
         i_file.write(i)
         i_file.seek(0)
 
-        self.i = cores.Graph(parse=i_file)
+        try:
+            self.i = cores.Graph(parse=i_file)
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing graph I.")
+                print(e)
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing graph I.\n"+str(e))
+                raise
 
         l = regex.group("L").lstrip("\n")
         l = re.compile("(    |\t)").sub("", l)
@@ -38,7 +56,16 @@ class Rule:
         l_file.write(l)
         l_file.seek(0)
 
-        self.l = cores.Graph(parse=l_file)
+        try:
+            self.l = cores.Graph(parse=l_file)
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing graph L.")
+                print(e)
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing graph L.\n"+str(e))
+                raise
 
         r = regex.group("R").lstrip("\n")
         r = re.compile("(    |\t)").sub("", r)
@@ -46,7 +73,16 @@ class Rule:
         r_file.write(r)
         r_file.seek(0)
 
-        self.r = cores.Graph(parse=r_file)
+        try:
+            self.r = cores.Graph(parse=r_file)
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing graph R.")
+                print(e)
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing graph R.\n"+str(e))
+                raise
 
         L_V = re.findall(r"\d+->\d+", regex.group("morphL"))
         R_V = re.findall(r"\d+->\d+", regex.group("morphR"))
@@ -58,8 +94,89 @@ class Rule:
         L_E = [n.split("->") for n in L_E]
         R_E = [n.split("->") for n in R_E]
 
-        L_E = [[".".join(m.split()) for m in n] for n in L_E]
-        R_E = [[".".join(m.split()) for m in n] for n in R_E]
+        L_E = [[m.split() for m in n] for n in L_E]
+        R_E = [[m.split() for m in n] for n in R_E]
+
+        try:
+            assert sorted([n for n in self.i.graph])==sorted([n[0] for n in L_V])
+            assert sorted([[n,m,l] for n in self.i.graph for m in self.i.graph[n] for l in self.i.graph[n][m]])==sorted([n[0] for n in L_E])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The domain of the function phi_L has to be exactly equal to the elements of I.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe domain of the function phi_L has to be exactly equal to the elements of I.".format(n))
+                raise
+
+        try:
+            assert sorted([n for n in self.i.graph])==sorted([n[0] for n in R_V])
+            assert sorted([[n,m,l] for n in self.i.graph for m in self.i.graph[n] for l in self.i.graph[n][m]])==sorted([n[0] for n in R_E])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The domain of the function phi_R has to be exactly equal to the elements of I.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe domain of the function phi_R has to be exactly equal to the elements of I.".format(n))
+                raise
+
+        try:
+            l_edges = [[n,m,l] for n in self.l.graph for m in self.l.graph[n] for l in self.l.graph[n][m]]
+            assert all([n[1] in self.l.graph for n in L_V])
+            assert all([n[1] in l_edges for n in L_E])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The image of the function phi_L has to a subset of the elements of L.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe image of the function phi_L has to a subset of the elements of L.".format(n))
+                raise
+
+        try:
+            r_edges = [[n,m,l] for n in self.r.graph for m in self.r.graph[n] for l in self.r.graph[n][m]]
+            assert all([n[1] in self.r.graph for n in R_V])
+            assert all([n[1] in r_edges for n in R_E])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The image of the function phi_R has to a subset of the elements of R.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe image of the function phi_R has to a subset of the elements of R.".format(n))
+                raise
+
+        try:
+            i_edges = [(n,m,l) for n in self.i.graph for m in self.i.graph[n] for l in self.i.graph[n][m]]
+            v_map = {n[0]: n[1] for n in L_V}
+            e_map = {tuple(n[0]): n[1] for n in L_E}
+            assert all([v_map[n[0]]==e_map[n][0] and v_map[n[1]]==e_map[n][1] and n[2]==e_map[n][2] for n in i_edges])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The function phi_L is not a morphism.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe function phi_L is not a morphism.".format(n))
+                raise
+
+        try:
+            i_edges = [(n,m,l) for n in self.i.graph for m in self.i.graph[n] for l in self.i.graph[n][m]]
+            v_map = {n[0]: n[1] for n in R_V}
+            e_map = {tuple(n[0]): n[1] for n in R_E}
+            assert all([v_map[n[0]]==e_map[n][0] and v_map[n[1]]==e_map[n][1] and n[2]==e_map[n][2] for n in i_edges])
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing rule {}.".format(n))
+                print("The function phi_R is not a morphism.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing rule {}.\nThe function phi_R is not a morphism.".format(n))
+                raise
+
+        L_E = [[".".join(m) for m in n] for n in L_E]
+        R_E = [[".".join(m) for m in n] for n in R_E]
 
         self.l_v = {n[0]: n[1] for n in L_V}
         self.r_v = {n[0]: n[1] for n in R_V}
@@ -81,13 +198,31 @@ class Inv_Chk:
 
         regex = re.fullmatch(r"T:(?P<T>{})\nrules:(?P<rules>{})".format(graph_re, rule_re), rule, flags=re.DOTALL)
 
+        if regex == None:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing the rule.")
+                print("The content of the input file does not match the required syntax.")
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing the rule.")
+                raise
+
         t = regex.group("T").lstrip("\n")
         t = re.compile("(    |\t)").sub("", t)
         t_file = TemporaryFile(mode="w+")
         t_file.write(t)
         t_file.seek(0)
 
-        t = cores.Graph(parse=t_file)
+        try:
+            t = cores.Graph(parse=t_file)
+        except Exception as e:
+            if len(sys.argv) > 1:
+                print("There has been an Error parsing graph T.")
+                print(e)
+                exit()
+            else:
+                messagebox.showerror("", "There has been an Error parsing graph T.\n"+str(e))
+                raise
 
         t.solve()
 
@@ -97,7 +232,7 @@ class Inv_Chk:
 
         for n in re.split(r"\n(?:    |\t)rule", regex.group("rules"))[1:]:
             rule = re.fullmatch(r"(\d+):(\n.*)", n, flags=re.DOTALL)
-            self.rules[rule[1]] = Rule(rule[2])
+            self.rules[rule[1]] = Rule(rule[2], rule[1])
 
     def check_inv(self):
 
@@ -245,7 +380,10 @@ class Inv_Chk_Gui:
 
         if self.file:
 
-            self.inv_chk = Inv_Chk(self.file)
+            try:
+                self.inv_chk = Inv_Chk(self.file)
+            except Exception as e:
+                return
 
             self.rules_box.config(values=[n for n in self.inv_chk.rules])
 
