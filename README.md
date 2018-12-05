@@ -8,7 +8,15 @@ To run inv_chk you need to make cores.py available in your python context. The e
 
 ## Usage:
 
-To run inv_chk, pass it a filepath to a problem instance, e.g.:  
+### GUI
+
+To run inv_chk with a GUI, just start it without any parameters.
+
+After loading a file, you can initiate the invariance check via the "chk_inv" button. After the check is done you can select which rule out of the entire problem instance you want to be shown. If the type graph is know to not be invariant under the selected rule, the t_L morphism for which there exists no fitting t_R is shown as a color coding within graph L and core(T).
+
+### CLI
+
+To run inv_chk via CLI, pass it a filepath to a problem instance, e.g.:  
 ```python .\inv_chk.py "C:\Users\Maxime\Documents\GitHub\inv_chk\rules\bipartite_inv.txt"```
 
 A problem instance is formated as follows:
