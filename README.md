@@ -53,7 +53,7 @@ Mappings are formated as follow:
 ```  
 [some node/edge in I]->[some node/edge in L/R]
 ``` 
-To specify an edge in morphism you concatenate it's source and target node as well as it's label with spaces.  
+To specify an edge in morphism you concatenate its source and target node as well as its label with spaces.  
 E.g.: ![example_edge](./example_edge.gif) would be written as:  
 ```1 2 A->3 4 A```
 
